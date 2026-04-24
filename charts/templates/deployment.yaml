@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qbitwebui.fullname" . }}
+  labels:
+    {{- include "qbitwebui.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "qbitwebui.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        {{- include "qbitwebui.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: default
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.env }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "qbitwebui.fullname" . }}
+          {{- end }}
+          env:
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret | default "encryption-key" | quote }}
+                  key: ENCRYPTION_KEY
+          ports:
+            - name: web
+              containerPort: 3000
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            {{- if .Values.persistence.downloads.enabled }}
+            - name: downloads
+              mountPath: /downloads
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.data.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "qbitwebui.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.persistence.downloads.enabled }}
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: {{ if .Values.persistence.downloads.existingClaim }}{{ .Values.persistence.downloads.existingClaim }}{{ else }}{{ include "qbitwebui.fullname" . }}-downloads{{ end }}
+        {{- end }}

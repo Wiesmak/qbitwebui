@@ -1,0 +1,59 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/maciejonos/qbitwebui
+  pullPolicy: IfNotPresent
+  tag: "2.34.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+env:
+  - PORT: "3000"
+  - DISABLE_AUTH: "true"
+  - ALLOW_SELF_SIGNED_CERTS: "true"
+  - DOWNLOADS_PATH: "/downloads"
+
+existingSecret: "encryption-key"
+
+service:
+  web:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  host: qbitwebui.example
+
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: web
+readinessProbe:
+  httpGet:
+    path: /
+    port: web
+
+persistence:
+  data:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  downloads:
+    enabled: true
+    existingClaim: ""

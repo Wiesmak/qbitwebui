@@ -1,0 +1,11 @@
+apiVersion: v2
+name: qbitwebui
+description: qbitwebui helm chart
+icon: https://github.com/user-attachments/assets/431cf92d-d8e6-4be7-a5b6-642ed6ab9898
+
+
+type: application
+
+version: 0.1.0
+
+appVersion: "2.34.0"

@@ -1,0 +1,36 @@
+{{- if and .Values.persistence.data.enabled (not .Values.persistence.data.existingClaim) -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "qbitwebui.fullname" . }}-data
+  labels:
+    {{- include "qbitwebui.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.data.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.data.size | quote }}
+  {{- if .Values.persistence.data.storageClass }}
+  storageClassName: {{ .Values.persistence.data.storageClass | quote }}
+  {{- end }}
+{{- end }}
+
+{{- if and .Values.persistence.downloads.enabled (not .Values.persistence.downloads.existingClaim) -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "qbitwebui.fullname" . }}-downloads
+  labels:
+    {{- include "qbitwebui.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.downloads.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.downloads.size | quote }}
+  {{- if .Values.persistence.downloads.storageClass }}
+  storageClassName: {{ .Values.persistence.downloads.storageClass | quote }}
+  {{- end }}
+{{- end }}
